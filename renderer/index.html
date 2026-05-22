@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JARVIS Core System</title>
+  <!-- Google Fonts for futuristic Sci-Fi UI -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <!-- Highlight.js for Code Highlighting -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/tokyo-night-dark.min.css">
+  <link rel="stylesheet" href="index.css">
+</head>
+<body>
+  <div class="hud-container">
+    
+    <!-- Titlebar -->
+    <header class="titlebar">
+      <div class="titlebar-logo">
+        <span class="logo-icon"></span>
+        <span class="logo-text">J.A.R.V.I.S. // CORE_OS_v2.0_AI</span>
+      </div>
+      <div class="titlebar-controls">
+        <button id="btn-minimize" class="control-btn" title="Minimize">—</button>
+        <button id="btn-close" class="control-btn close-btn" title="Close">×</button>
+      </div>
+    </header>
+
+    <main class="hud-content">
+      <div class="corner-highlight top-left"></div>
+      <div class="corner-highlight top-right"></div>
+      <div class="corner-highlight bottom-left"></div>
+      <div class="corner-highlight bottom-right"></div>
+      <div class="scanner-line"></div>
+
+      <!-- Header Section -->
+      <section class="hud-header">
+        <h1>INTELLIGENCE MODULE ACTIVE</h1>
+        <div class="status-indicator">
+          <span class="status-dot pulsing" id="status-dot"></span>
+          <span class="status-label" id="status-label">AWAITING INPUT</span>
+        </div>
+      </section>
+
+      <!-- Main Layout -->
+      <div class="hud-grid" style="grid-template-columns: 2fr 1fr;">
+        
+        <!-- Chat Interface -->
+        <section class="panel chat-panel" style="flex: 1;">
+          <div class="panel-header">
+            <h2>COMMUNICATIONS LINK</h2>
+          </div>
+          <div class="panel-body chat-stream-container">
+            <div id="chat-stream" class="chat-stream">
+              <div class="log-entry system">[SYSTEM] Gemini 2.5 Flash API connection established. Tool endpoints registered.</div>
+            </div>
+            
+            <div class="chat-input-wrapper">
+              <textarea id="chat-input" class="chat-textarea" placeholder="Input directive for JARVIS..." rows="1"></textarea>
+              <button id="btn-send-chat" class="glowing-btn small-btn">SEND</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- Sidebar Telemetry & Diagnostics -->
+        <div style="display: flex; flex-direction: column; gap: 20px;">
+          <section class="panel radar-panel">
+            <div class="panel-header">
+              <h2>CORE TELEMETRY</h2>
+            </div>
+            <div class="panel-body radar-wrapper">
+              <div class="radar-circle" style="width: 80px; height: 80px;">
+                <div class="radar-sweep"></div>
+                <div class="radar-crosshair"></div>
+                <div class="radar-dot dot-1"></div>
+              </div>
+              <div class="telemetry-stats">
+                <div class="stat-row"><span>CPU_LOAD:</span> <span class="blue-text" id="cpu-stat">12%</span></div>
+                <div class="stat-row"><span>LATENCY:</span> <span class="blue-text" id="latency-stat">0ms</span></div>
+              </div>
+            </div>
+          </section>
+
+          <section class="panel console-panel">
+            <div class="panel-header">
+              <h2>IPC PING TEST</h2>
+            </div>
+            <div class="panel-body">
+              <input type="text" id="ping-message" value="Ping" class="ping-input" style="width:100%; margin-bottom:10px; background: rgba(0,0,0,0.5); border: 1px solid var(--border-color); color: var(--accent-cyan); padding: 5px;">
+              <button id="btn-ping" class="glowing-btn" style="width: 100%;">TEST BRIDGE</button>
+              <div id="console-logs" class="console-output" style="margin-top: 10px; max-height: 80px;"></div>
+            </div>
+          </section>
+        </div>
+
+      </div>
+    </main>
+
+    <footer class="hud-footer">
+      <div class="footer-segment">LOC // 127.0.0.1</div>
+      <div class="footer-segment text-center">AI COGNITIVE MODULES: ONLINE (GEMINI-2.5-FLASH)</div>
+      <div class="footer-segment text-right" id="clock">00:00:00</div>
+    </footer>
+  </div>
+
+  <!-- Marked JS for Markdown -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.2/marked.min.js"></script>
+  <!-- Highlight JS for Code -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+  <script src="renderer.js"></script>
+</body>
+</html>
