@@ -34,6 +34,20 @@ contextBridge.exposeInMainWorld('jarvisAPI', {
    */
   onChatStatus: (callback) => {
     ipcRenderer.on('chat-status', (event, statusText) => callback(statusText));
+  },
+
+  /**
+   * Listen for structured tool execution events
+   */
+  onToolEvent: (callback) => {
+    ipcRenderer.on('tool-event', (event, data) => callback(data));
+  },
+
+  /**
+   * Check if Groq API is responding
+   */
+  checkApiStatus: async () => {
+    return await ipcRenderer.invoke('check-api-status');
   }
 });
 console.log('[Preload] Secure API bridge loaded successfully.');

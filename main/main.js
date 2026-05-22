@@ -65,7 +65,16 @@ ipcMain.handle('chat-message', async (event, message) => {
   const sendStatusUpdate = (statusText) => {
     event.sender.send('chat-status', statusText);
   };
-  return await ai.sendMessage(message, sendStatusUpdate);
+  const sendToolEvent = (data) => {
+    event.sender.send('tool-event', data);
+  };
+  return await ai.sendMessage(message, sendStatusUpdate, sendToolEvent);
+});
+
+// IPC Handler for Groq API status check
+ipcMain.handle('check-api-status', async () => {
+  console.log('[Main Process] Received api status check request');
+  return await ai.checkApiStatus();
 });
 
 app.whenReady().then(() => {

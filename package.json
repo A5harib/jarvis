@@ -13,8 +13,8 @@
     "electron-builder": "^24.13.3"
   },
   "dependencies": {
-    "@google/generative-ai": "^0.24.1",
     "dotenv": "^17.4.2",
+    "groq-sdk": "^1.2.0",
     "highlight.js": "^11.11.1",
     "marked": "^18.0.4"
   }

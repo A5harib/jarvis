@@ -53,7 +53,7 @@
           </div>
           <div class="panel-body chat-stream-container">
             <div id="chat-stream" class="chat-stream">
-              <div class="log-entry system">[SYSTEM] Gemini 2.5 Flash API connection established. Tool endpoints registered.</div>
+              <div class="log-entry system">[SYSTEM] JARVIS v2.3 connection established. Tool endpoints registered.</div>
             </div>
             
             <div class="chat-input-wrapper">
@@ -78,6 +78,7 @@
               <div class="telemetry-stats">
                 <div class="stat-row"><span>CPU_LOAD:</span> <span class="blue-text" id="cpu-stat">12%</span></div>
                 <div class="stat-row"><span>LATENCY:</span> <span class="blue-text" id="latency-stat">0ms</span></div>
+                <div class="stat-row"><span>API_STATUS:</span> <span class="blue-text" id="api-status-stat" style="cursor: pointer; font-weight: bold; transition: color 0.3s;" title="Click to test Groq API">CHECKING...</span></div>
               </div>
             </div>
           </section>
@@ -99,7 +100,7 @@
 
     <footer class="hud-footer">
       <div class="footer-segment">LOC // 127.0.0.1</div>
-      <div class="footer-segment text-center">AI COGNITIVE MODULES: ONLINE (GEMINI-2.5-FLASH)</div>
+      <div class="footer-segment text-center">AI COGNITIVE MODULES: ONLINE (LLAMA-3.3-70B)</div>
       <div class="footer-segment text-right" id="clock">00:00:00</div>
     </footer>
   </div>
