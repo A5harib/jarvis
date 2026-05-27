@@ -1,5 +1,6 @@
 require('dotenv').config();
 const Groq = require("groq-sdk");
+const { OpenAI } = require("openai");
 const { exec } = require('child_process');
 const util = require('util');
 const execPromise = util.promisify(exec);
@@ -9,7 +10,12 @@ const path = require('path');
 const API_KEY = process.env.GROQ_API_KEY;
 const MODEL_NAME = process.env.GROQ_MODEL || "llama-3.3-70b-versatile";
 
+const OLLAMA_BASE_URL = process.env.OLLAMA_BASE_URL || "http://127.0.0.1:11434/v1";
+const OLLAMA_MODEL = process.env.OLLAMA_MODEL || "qwen2.5-coder:7b";
+
 let groq = null;
+let openai = null;
+let activeEngine = 'groq'; // Default engine
 let messages = [];
 
 // Define Tools in Groq/OpenAI format
@@ -119,16 +125,41 @@ const tools = [
         required: ["filepath"]
       }
     }
+  },
+  {
+    type: "function",
+    function: {
+      name: "update_dashboard",
+      description: "Push an intelligence brief, news headlines, or extracted facts to the UI dashboard.",
+      parameters: {
+        type: "object",
+        properties: {
+          items: {
+            type: "array",
+            items: { type: "string" },
+            description: "List of brief headlines or facts to display."
+          }
+        },
+        required: ["items"]
+      }
+    }
   }
 ];
 
-// Initialize Groq Client
+// Initialize AI Clients
 function initAI() {
   if (!API_KEY || API_KEY.includes('YOUR_API_KEY')) {
-    throw new Error("Invalid or missing GROQ_API_KEY in .env file");
+    console.warn("Missing GROQ_API_KEY. Groq engine may not work.");
+  } else {
+    groq = new Groq({ apiKey: API_KEY });
+    console.log(`[AI] Initialized Groq model: ${MODEL_NAME}`);
   }
   
-  groq = new Groq({ apiKey: API_KEY });
+  openai = new OpenAI({
+    baseURL: OLLAMA_BASE_URL,
+    apiKey: 'ollama', // Required by SDK, ignored by Ollama
+  });
+  console.log(`[AI] Initialized Ollama model: ${OLLAMA_MODEL}`);
   
   const baseSystemPrompt = "You are JARVIS, an advanced AI assistant embedded within an Electron OS application. You have access to local system tools like bash execution, file editing, and web search. Be helpful, concise, and use a futuristic, professional tone. IMPORTANT: When using execute_bash, you MUST use non-interactive flags (e.g., --yes, -y). DO NOT use execute_bash to write or read file contents (especially code), as it causes JSON escaping errors. ALWAYS use the native write_to_file and read_file tools instead.";
 
@@ -138,8 +169,15 @@ function initAI() {
       content: baseSystemPrompt
     }
   ];
-  
-  console.log(`[AI] Initialized Groq model: ${MODEL_NAME}`);
+}
+
+function setEngine(engine) {
+  if (engine === 'groq' || engine === 'local') {
+    activeEngine = engine;
+    console.log(`[AI] Engine switched to: ${activeEngine}`);
+    return { success: true, engine: activeEngine };
+  }
+  return { success: false, error: 'Invalid engine' };
 }
 
 // Tool Implementation Logic
@@ -162,10 +200,28 @@ async function handleToolCall(toolCall, sendStatusUpdate) {
     else if (name === 'web_search') {
       const query = args.query;
       console.log(`[Tool] web_search: ${query}`);
-      // Simple mock for testing without an external API key (duckduckgo or similar)
-      return {
-        result: `Mock search results for '${query}': 1. This is a test result. 2. Web search tool is functioning.`
-      };
+      try {
+        const response = await fetch(`https://news.google.com/rss/search?q=${encodeURIComponent(query)}&hl=en-US&gl=US&ceid=US:en`);
+        const xml = await response.text();
+        
+        const items = xml.match(/<item>([\s\S]*?)<\/item>/g) || [];
+        let results = [];
+        for (let i = 0; i < Math.min(items.length, 5); i++) {
+           const titleMatch = items[i].match(/<title>(.*?)<\/title>/);
+           if (titleMatch) {
+              let title = titleMatch[1].replace(/<!\[CDATA\[(.*?)\]\]>/, '$1');
+              results.push(`${i+1}. ${title}`);
+           }
+        }
+        
+        if (results.length > 0) {
+          return { result: results.join('\n') };
+        } else {
+          return { result: `No results found for '${query}'.` };
+        }
+      } catch (err) {
+        return { error: `Web search failed: ${err.message}` };
+      }
     }
     else if (name === 'save_memory') {
       const memory_text = args.memory_text;
@@ -200,6 +256,10 @@ async function handleToolCall(toolCall, sendStatusUpdate) {
       }
       return { error: `File not found: ${filepath}` };
     }
+    else if (name === 'update_dashboard') {
+      console.log(`[Tool] update_dashboard: ${args.items.length} items`);
+      return { result: "Dashboard updated successfully." };
+    }
     
     return { error: `Tool ${name} not found.` };
   } catch (error) {
@@ -209,7 +269,7 @@ async function handleToolCall(toolCall, sendStatusUpdate) {
 
 // Send Message Flow
 async function sendMessage(text, sendStatusUpdate, sendToolEvent) {
-  if (!groq) {
+  if (!groq && !openai) {
     try {
       initAI();
     } catch (e) {
@@ -225,14 +285,50 @@ async function sendMessage(text, sendStatusUpdate, sendToolEvent) {
   } catch (err) {}
 
   try {
-    let completion = await groq.chat.completions.create({
-      messages: messages,
-      model: MODEL_NAME,
-      tools: tools,
-      tool_choice: "auto",
-    });
+    let completion;
+    
+    if (activeEngine === 'local') {
+      completion = await openai.chat.completions.create({
+        messages: messages,
+        model: OLLAMA_MODEL,
+        tools: tools,
+        tool_choice: "auto",
+      });
+    } else {
+      completion = await groq.chat.completions.create({
+        messages: messages,
+        model: MODEL_NAME,
+        tools: tools,
+        tool_choice: "auto",
+      });
+    }
 
     let responseMessage = completion.choices[0].message;
+
+    // Fallback parser for local models that output tool calls as plaintext JSON
+    function ensureToolCalls(msg) {
+      if (activeEngine === 'local' && msg.content) {
+        try {
+          let text = msg.content.trim();
+          if (text.startsWith('```json')) text = text.replace(/^```json\n?/, '').replace(/\n?```$/, '').trim();
+          const parsed = JSON.parse(text);
+          if (parsed.name && parsed.arguments) {
+            if (!msg.tool_calls) msg.tool_calls = [];
+            msg.tool_calls.push({
+              id: 'call_' + Math.random().toString(36).substring(7),
+              type: 'function',
+              function: {
+                name: parsed.name,
+                arguments: typeof parsed.arguments === 'string' ? parsed.arguments : JSON.stringify(parsed.arguments)
+              }
+            });
+            msg.content = ""; // Hide raw JSON from output
+          }
+        } catch(e) {}
+      }
+    }
+
+    ensureToolCalls(responseMessage);
     messages.push(responseMessage);
     
     // Check if a tool was called
@@ -268,13 +364,23 @@ async function sendMessage(text, sendStatusUpdate, sendToolEvent) {
       
       // Send the tool results back to the model
       sendStatusUpdate(`Analyzing tool results...`);
-      completion = await groq.chat.completions.create({
-        messages: messages,
-        model: MODEL_NAME,
-        tools: tools,
-        tool_choice: "auto",
-      });
+      if (activeEngine === 'local') {
+        completion = await openai.chat.completions.create({
+          messages: messages,
+          model: OLLAMA_MODEL,
+          tools: tools,
+          tool_choice: "auto",
+        });
+      } else {
+        completion = await groq.chat.completions.create({
+          messages: messages,
+          model: MODEL_NAME,
+          tools: tools,
+          tool_choice: "auto",
+        });
+      }
       responseMessage = completion.choices[0].message;
+      ensureToolCalls(responseMessage);
       messages.push(responseMessage);
     }
     
@@ -297,7 +403,7 @@ async function sendMessage(text, sendStatusUpdate, sendToolEvent) {
 
 // Check API Status
 async function checkApiStatus() {
-  if (!groq) {
+  if (!groq && !openai) {
     try {
       initAI();
     } catch (e) {
@@ -305,8 +411,11 @@ async function checkApiStatus() {
     }
   }
   try {
-    // List models to check connection
-    await groq.models.list();
+    if (activeEngine === 'local') {
+      await openai.models.list();
+    } else {
+      await groq.models.list();
+    }
     return { status: 'online' };
   } catch (error) {
     return { status: 'offline', error: error.message };
@@ -316,5 +425,6 @@ async function checkApiStatus() {
 module.exports = {
   sendMessage,
   initAI,
-  checkApiStatus
+  checkApiStatus,
+  setEngine
 };

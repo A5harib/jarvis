@@ -21,6 +21,9 @@ function createWindow() {
   // Load the frontend UI
   mainWindow.loadFile(path.join(__dirname, '../renderer/index.html'));
 
+  // Maximize by default
+  mainWindow.maximize();
+
   // Open DevTools in a detached window (useful for debugging, can be commented out or triggered via keyboard)
   // mainWindow.webContents.openDevTools({ mode: 'detach' });
 
@@ -75,6 +78,12 @@ ipcMain.handle('chat-message', async (event, message) => {
 ipcMain.handle('check-api-status', async () => {
   console.log('[Main Process] Received api status check request');
   return await ai.checkApiStatus();
+});
+
+// IPC Handler for AI engine toggle
+ipcMain.handle('set-ai-engine', async (event, engine) => {
+  console.log(`[Main Process] Received request to switch AI engine to: ${engine}`);
+  return ai.setEngine(engine);
 });
 
 app.whenReady().then(() => {

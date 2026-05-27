@@ -48,6 +48,13 @@ contextBridge.exposeInMainWorld('jarvisAPI', {
    */
   checkApiStatus: async () => {
     return await ipcRenderer.invoke('check-api-status');
+  },
+
+  /**
+   * Switch the active AI engine (groq or local)
+   */
+  setAiEngine: async (engine) => {
+    return await ipcRenderer.invoke('set-ai-engine', engine);
   }
 });
 console.log('[Preload] Secure API bridge loaded successfully.');

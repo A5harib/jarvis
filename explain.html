@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Explain Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script type="module">
+      import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+      mermaid.initialize({ startOnLoad: true, theme: 'default' });
+    </script>
+    <style>
+      pre {
+        background-color: #1e293b;
+        color: #f8fafc;
+        padding: 1rem;
+        border-radius: 0.5rem;
+        overflow-x: auto;
+      }
+      .mermaid {
+        background-color: #ffffff;
+        padding: 1.5rem;
+        border-radius: 0.5rem;
+        box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+        display: flex;
+        justify-content: center;
+      }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-900 font-sans antialiased p-8">
+    <div class="max-w-6xl mx-auto space-y-12">
+        <header class="border-b border-slate-200 pb-6">
+            <h1 class="text-4xl font-extrabold tracking-tight text-slate-900">JARVIS Project Overview</h1>
+            <p class="mt-2 text-lg text-slate-600">Live project state, architecture, and interactive agent commands for the custom Electron-based AI assistant.</p>
+        </header>
+
+        <!-- 1. Actionable AI Choices (Next Steps) -->
+        <section class="space-y-4">
+            <h2 class="text-2xl font-bold text-slate-800">1. Actionable AI Choices (Next Steps)</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                
+                <!-- Option 1 -->
+                <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                    <h3 class="font-bold text-lg text-slate-800 mb-2">Automate Conversation Truncation</h3>
+                    <p class="text-slate-600 text-sm mb-4">The Groq cloud API threw a rate limit error (HTTP 413) because the background news sweeps overloaded the context window. We should implement an auto-truncate feature in the memory array to prevent Token Limits.</p>
+                    <pre class="text-xs"><code>{
+  "command": "Implement a conversation truncation limit in main/ai.js for the Groq engine to keep the token size under 8000."
+}</code></pre>
+                </div>
+
+                <!-- Option 2 -->
+                <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                    <h3 class="font-bold text-lg text-slate-800 mb-2">Enhance Offline Memory</h3>
+                    <p class="text-slate-600 text-sm mb-4">Currently, memories are appended to a flat `memories.txt` file. We can upgrade this to a lightweight JSON structure or a SQLite database so JARVIS can query past data more intelligently without parsing raw text.</p>
+                    <pre class="text-xs"><code>{
+  "command": "Upgrade the save_memory tool in main/ai.js to use structured JSON storage instead of plain text."
+}</code></pre>
+                </div>
+
+                <!-- Option 3 -->
+                <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                    <h3 class="font-bold text-lg text-slate-800 mb-2">Add UI Settings Modal</h3>
+                    <p class="text-slate-600 text-sm mb-4">Currently, API keys and AI engine toggles are hardcoded or simple switches. We should build a fully-featured Settings Modal in the HUD to let the user input API keys, change system prompts, and configure polling rates dynamically.</p>
+                    <pre class="text-xs"><code>{
+  "command": "Build a settings modal overlay in renderer/index.html to manage API keys and sweep intervals."
+}</code></pre>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- 2. The Design System -->
+        <section class="space-y-4">
+            <h2 class="text-2xl font-bold text-slate-800">2. The Design System (JARVIS HUD)</h2>
+            <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                <p class="text-slate-600 mb-6">The interface embraces a dark, futuristic "glassmorphism" hacker aesthetic built with pure CSS variables and Google Fonts. It relies heavily on transparency, cyan/orange neon accents, and monospace readability.</p>
+                
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                    <div class="space-y-2">
+                        <div class="h-16 rounded-md bg-[#050505] border border-slate-300"></div>
+                        <p class="text-xs font-mono text-center">Background<br>hsl(30, 20%, 2%)</p>
+                    </div>
+                    <div class="space-y-2">
+                        <div class="h-16 rounded-md bg-[#00ffff] border border-slate-300"></div>
+                        <p class="text-xs font-mono text-center">Accent Cyan<br>#00ffff</p>
+                    </div>
+                    <div class="space-y-2">
+                        <div class="h-16 rounded-md bg-[#ff9900] border border-slate-300"></div>
+                        <p class="text-xs font-mono text-center">Accent Orange<br>#ff9900</p>
+                    </div>
+                    <div class="space-y-2">
+                        <div class="h-16 rounded-md bg-[rgba(255,153,0,0.05)] border border-slate-300 relative">
+                            <div class="absolute inset-0 flex items-center justify-center text-xs text-orange-600">Overlay</div>
+                        </div>
+                        <p class="text-xs font-mono text-center">Glass Overlay<br>rgba(255,153,0,0.05)</p>
+                    </div>
+                </div>
+
+                <div class="space-y-4">
+                    <div>
+                        <p class="text-sm text-slate-500 uppercase tracking-widest font-bold">Headers / HUD Elements</p>
+                        <p class="text-2xl font-sans text-slate-800" style="font-family: 'Orbitron', sans-serif;">Orbitron</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-slate-500 uppercase tracking-widest font-bold">Telemetry / Stats</p>
+                        <p class="text-xl text-slate-800" style="font-family: 'Share Tech Mono', monospace;">Share Tech Mono</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-slate-500 uppercase tracking-widest font-bold">Body / Chat Readability</p>
+                        <p class="text-lg text-slate-800" style="font-family: 'JetBrains Mono', monospace;">JetBrains Mono</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 3. Task Management -->
+        <section class="space-y-4">
+            <h2 class="text-2xl font-bold text-slate-800">3. Task Management</h2>
+            <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                <h3 class="font-bold text-slate-700 mb-2">Pending To-do's</h3>
+                <ul class="list-disc list-inside text-slate-600 mb-6 space-y-1">
+                    <li>Truncate Groq conversation history to prevent `413 Token Limit` crashes.</li>
+                    <li>Verify if local Ollama engine accurately triggers the `update_dashboard` tool without hallucinations.</li>
+                </ul>
+
+                <h3 class="font-bold text-slate-700 mb-2">Recently Completed (Done)</h3>
+                <ul class="list-disc list-inside text-slate-600 space-y-1">
+                    <li class="line-through">Removed heavy `systeminformation` hardware polling due to GPU spikes.</li>
+                    <li class="line-through">Migrated background web search from blocked DuckDuckGo endpoint to Google News XML RSS feed.</li>
+                    <li class="line-through">Fixed `SyntaxError` crash in `renderer.js` caused by duplicate const declarations.</li>
+                    <li class="line-through">Optimized layout grid, swapping the Chat and Briefing panels for better UX.</li>
+                    <li class="line-through">Updated typography to JetBrains Mono to vastly improve readability of long texts.</li>
+                    <li class="line-through">Deleted infinite CSS scanning/radar animations to eliminate 70% Electron GPU utilization.</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- 4. Architecture Walkthrough & Pipelines -->
+        <section class="space-y-4">
+            <h2 class="text-2xl font-bold text-slate-800">4. Architecture Walkthrough</h2>
+            <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200 space-y-4">
+                <p class="text-slate-600">The JARVIS application is an Electron desktop app serving a native HTML/CSS/JS frontend. The backend integrates heavily with a dual-engine AI pipeline (Cloud Groq vs Local Ollama). The architecture heavily leverages Electron's IPC system to safely bridge the sandboxed renderer to the secure node main process.</p>
+                
+                <div class="bg-slate-50 p-4 border-l-4 border-slate-400">
+                    <h4 class="font-bold text-sm text-slate-700">The AI Tool Execution Pipeline</h4>
+                    <p class="text-sm text-slate-600 mt-1">When the AI decides to call a tool (like `web_search`), the LLM outputs a JSON payload. The backend `main/ai.js` intercepts this JSON, executes the local Node.js function natively, appends the result to the memory array, and automatically pings the LLM again to synthesize the findings.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 5. Workflows & Flow Charts Diagram Area -->
+        <section class="space-y-4">
+            <h2 class="text-2xl font-bold text-slate-800">5. Intelligence Sweep Workflow</h2>
+            <div class="mermaid">
+graph TD
+    A[Renderer setInterval] -->|triggerIntelSweep| B(IPC Invoke 'chat-message')
+    B --> C{Active Engine?}
+    C -->|GROQ| D[Groq Cloud API]
+    C -->|LOCAL| E[Ollama Local Process]
+    D --> F[Analyze Prompt]
+    E --> F
+    F -->|Emit JSON Tool Call| G{Tool Name}
+    G -->|web_search| H[Fetch Google News RSS XML]
+    G -->|update_dashboard| I[Send 'tool-event' via WebContents to UI]
+    H --> J[Append Result to Memory array]
+    J --> F
+    I --> K((Dashboard Updated))
+            </div>
+        </section>
+
+        <!-- 6. Class Diagram Area -->
+        <section class="space-y-4">
+            <h2 class="text-2xl font-bold text-slate-800">6. Core System Architecture</h2>
+            <div class="mermaid">
+classDiagram
+    class Renderer {
+        +triggerIntelSweep()
+        +handleSendChat()
+        -appendChatMessage()
+    }
+    class PreloadBridge {
+        +sendChatMessage(string)
+        +onToolEvent(callback)
+        +setAiEngine(string)
+    }
+    class MainProcess {
+        -createWindow()
+        +ipcMain.handle()
+    }
+    class AiEngine {
+        -conversationHistory Array
+        -activeEngine String
+        +sendMessage(prompt)
+        +setEngine(name)
+        +executeTool(name, args)
+    }
+
+    Renderer --|> PreloadBridge : window.jarvisAPI
+    PreloadBridge --|> MainProcess : IPC Invocation
+    MainProcess --|> AiEngine : Route Request
+            </div>
+        </section>
+
+    </div>
+</body>
+</html>

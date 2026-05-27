@@ -11,6 +11,7 @@
   --text-dim: hsl(38, 40%, 60%);
   --font-family-hud: 'Orbitron', sans-serif;
   --font-family-mono: 'Share Tech Mono', monospace;
+  --font-family-body: 'JetBrains Mono', monospace;
   --glow-shadow: 0 0 15px hsla(38, 100%, 50%, 0.4);
   --glow-shadow-intense: 0 0 25px hsla(38, 100%, 50%, 0.7);
 }
@@ -167,7 +168,6 @@ body {
   opacity: 0.15;
   box-shadow: 0 0 10px var(--accent-cyan);
   pointer-events: none;
-  animation: scan 4s linear infinite;
 }
 
 @keyframes scan {
@@ -221,7 +221,7 @@ body {
 /* Dashboard Panels Layout */
 .hud-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1.5fr 2fr 1fr;
   gap: 20px;
   flex: 1.2;
 }
@@ -270,6 +270,45 @@ body {
   color: var(--text-dim);
   line-height: 1.5;
   margin-bottom: 15px;
+}
+
+/* Intelligence Briefing Styles */
+.briefing-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow-y: auto;
+  max-height: 250px;
+  padding-right: 5px;
+  user-select: text; /* Allow user to copy news text */
+}
+
+.briefing-list::-webkit-scrollbar {
+  width: 4px;
+}
+.briefing-list::-webkit-scrollbar-thumb {
+  background: hsla(38, 100%, 50%, 0.2);
+  border-radius: 2px;
+}
+
+.briefing-item {
+  background: hsla(30, 20%, 4%, 0.6);
+  border-left: 2px solid var(--accent-cyan-dim);
+  padding: 15px;
+  font-size: 13px;
+  line-height: 1.6;
+  font-family: var(--font-family-body);
+  letter-spacing: 0.5px;
+}
+.briefing-item:hover {
+  border-left-color: var(--accent-cyan);
+  background: hsla(30, 20%, 8%, 0.8);
+}
+.briefing-time {
+  color: var(--accent-cyan-dim);
+  font-size: 9px;
+  display: block;
+  margin-bottom: 3px;
 }
 
 /* Input Fields and Buttons */
@@ -372,7 +411,6 @@ body {
   bottom: 50%;
   right: 50%;
   border-radius: 100% 0 0 0;
-  animation: sweep 3s linear infinite;
   pointer-events: none;
 }
 
@@ -494,6 +532,7 @@ body {
   flex-direction: column;
   gap: 8px;
   max-height: 160px;
+  user-select: text;
 }
 
 .log-entry {
@@ -583,9 +622,11 @@ body {
   display: flex;
   flex-direction: column;
   gap: 15px;
-  font-family: var(--font-family-mono);
-  font-size: 13px;
-  max-height: 400px;
+  font-family: var(--font-family-body);
+  font-size: 14px;
+  letter-spacing: 0.3px;
+  max-height: 500px;
+  user-select: text; /* Allow user to copy chat text */
 }
 
 .chat-input-wrapper {
@@ -602,8 +643,8 @@ body {
   background: transparent;
   border: none;
   color: var(--accent-cyan);
-  font-family: var(--font-family-mono);
-  font-size: 13px;
+  font-family: var(--font-family-body);
+  font-size: 14px;
   resize: none;
   outline: none;
   padding: 5px;
@@ -642,6 +683,7 @@ body {
   border: 1px solid var(--border-color);
   color: var(--text-main);
   border-bottom-left-radius: 0;
+  line-height: 1.6;
 }
 
 /* Markdown Styling inside bubbles */

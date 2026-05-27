@@ -54,7 +54,7 @@ document.addEventListener('DOMContentLoaded', () => {
         chatStream.insertAdjacentHTML('beforeend', html);
         chatStream.scrollTop = chatStream.scrollHeight;
         
-        // Trigger Toast for Memories
+        // Trigger Toast for Memories and Update Dashboard
         if (data.name === 'save_memory') {
           try {
             const argsObj = JSON.parse(data.args);
@@ -62,6 +62,20 @@ document.addEventListener('DOMContentLoaded', () => {
           } catch(e) {
             showToast("New memory securely stored.");
           }
+        } else if (data.name === 'update_dashboard') {
+          try {
+            const argsObj = typeof data.args === 'string' ? JSON.parse(data.args) : data.args;
+            const items = argsObj.items;
+            const container = document.getElementById('briefing-container');
+            if (container && items && Array.isArray(items)) {
+               container.innerHTML = ''; // Clear previous items
+               items.forEach(item => {
+                 const time = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                 const safeItem = item.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+                 container.innerHTML += `<div class="briefing-item"><span class="briefing-time">${time}</span>${safeItem}</div>`;
+               });
+            }
+          } catch(e) { console.error("Failed to parse update_dashboard items", e); }
         }
       } else if (data.type === 'result') {
         let resStr = JSON.stringify(data.result);
@@ -130,13 +144,15 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // Chat Logic
-  async function handleSendChat() {
-    const text = chatInput.value.trim();
+  async function handleSendChat(overrideText = null) {
+    const text = overrideText !== null ? overrideText : chatInput.value.trim();
     if (!text || !isBridgeReady) return;
 
-    // Append User Message
-    appendChatMessage('user', text);
-    chatInput.value = '';
+    // Append User Message only if it's from the input box
+    if (overrideText === null) {
+      appendChatMessage('user', text);
+      chatInput.value = '';
+    }
     
     // Set Status
     statusLabel.textContent = "PROCESSING...";
@@ -191,11 +207,39 @@ document.addEventListener('DOMContentLoaded', () => {
     chatStream.scrollTop = chatStream.scrollHeight;
   }
 
-  // Enter to send
+  // Chat Input History
+  const inputHistory = [];
+  let historyIndex = -1;
+  let tempCurrentInput = '';
+
+  // Input Keyboard Controls
   chatInput.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
+      if (chatInput.value.trim() !== '') {
+        inputHistory.push(chatInput.value.trim());
+        historyIndex = inputHistory.length;
+      }
       handleSendChat();
+    } else if (e.key === 'ArrowUp') {
+      if (historyIndex > 0) {
+        e.preventDefault();
+        if (historyIndex === inputHistory.length) {
+          tempCurrentInput = chatInput.value;
+        }
+        historyIndex--;
+        chatInput.value = inputHistory[historyIndex];
+      }
+    } else if (e.key === 'ArrowDown') {
+      if (historyIndex < inputHistory.length - 1) {
+        e.preventDefault();
+        historyIndex++;
+        chatInput.value = inputHistory[historyIndex];
+      } else if (historyIndex === inputHistory.length - 1) {
+        e.preventDefault();
+        historyIndex++;
+        chatInput.value = tempCurrentInput;
+      }
     }
   });
   
@@ -207,13 +251,29 @@ document.addEventListener('DOMContentLoaded', () => {
   setInterval(() => {
     document.getElementById('clock').textContent = new Date().toLocaleTimeString();
   }, 1000);
-  setInterval(() => {
-    const simulatedLoad = Math.floor(Math.random() * 8) + 6;
-    cpuStatEl.textContent = `${simulatedLoad}%`;
-  }, 3000);
-
   // API Status Check
   const apiStatusEl = document.getElementById('api-status-stat');
+  
+  // Automated Intelligence Sweep (every 30 mins)
+  const SWEEP_INTERVAL = 30 * 60 * 1000; 
+  async function triggerIntelSweep() {
+    if (!isBridgeReady) return;
+    appendChatMessage('system', '[SYSTEM] Initiating scheduled intelligence sweep in background...');
+    const prompt = "CRITICAL BACKGROUND TASK: Execute a web search for the latest top global news or tech news for today's date. Summarize the top 3-4 most important headlines, and then use the `update_dashboard` tool to push those summaries to the UI. YOU MUST ONLY USE THE TOOL. DO NOT OUTPUT ANY CONVERSATIONAL TEXT.";
+    
+    statusLabel.textContent = "SWEEPING...";
+    try {
+      await window.jarvisAPI.sendChatMessage(prompt);
+      statusLabel.textContent = "AWAITING INPUT";
+    } catch(e) {
+      statusLabel.textContent = "SWEEP FAILED";
+      setTimeout(() => { statusLabel.textContent = "AWAITING INPUT"; }, 3000);
+    }
+  }
+
+  // Trigger first sweep 5 seconds after launch
+  setTimeout(triggerIntelSweep, 5000);
+  setInterval(triggerIntelSweep, SWEEP_INTERVAL);
   async function checkApiConnection() {
     if (!isBridgeReady) {
       if (apiStatusEl) apiStatusEl.textContent = "NO BRIDGE";
@@ -252,6 +312,44 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if (apiStatusEl) {
     apiStatusEl.addEventListener('click', checkApiConnection);
+  }
+
+  // Engine Toggle Logic
+  const engineToggle = document.getElementById('engine-toggle');
+  const labelGroq = document.getElementById('label-groq');
+  const labelLocal = document.getElementById('label-local');
+  const footerAiModule = document.querySelector('.footer-segment.text-center');
+
+  if (engineToggle && isBridgeReady) {
+    engineToggle.addEventListener('change', async (e) => {
+      const isLocal = e.target.checked;
+      const engine = isLocal ? 'local' : 'groq';
+      
+      // Update UI labels
+      if (isLocal) {
+        labelLocal.classList.add('active-engine');
+        labelLocal.style.color = '';
+        labelGroq.classList.remove('active-engine');
+        labelGroq.style.color = '#666';
+        if (footerAiModule) footerAiModule.textContent = 'AI COGNITIVE MODULES: ONLINE (QWEN-2.5-CODER)';
+      } else {
+        labelGroq.classList.add('active-engine');
+        labelGroq.style.color = '';
+        labelLocal.classList.remove('active-engine');
+        labelLocal.style.color = '#666';
+        if (footerAiModule) footerAiModule.textContent = 'AI COGNITIVE MODULES: ONLINE (LLAMA-3.3-70B)';
+      }
+
+      try {
+        await window.jarvisAPI.setAiEngine(engine);
+        // Re-check status on the new engine
+        checkApiConnection();
+        
+        appendChatMessage('system', `[SYSTEM] Engine switched to: ${engine.toUpperCase()}`);
+      } catch (err) {
+        appendChatMessage('system', `[ERROR] Failed to switch engine: ${err.message}`);
+      }
+    });
   }
   
   // Run check initially and then every 30 seconds
