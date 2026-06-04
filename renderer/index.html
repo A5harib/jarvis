@@ -1,199 +1,279 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>JARVIS Core System</title>
-  <!-- Google Fonts for futuristic Sci-Fi UI -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
-  <!-- Highlight.js for Code Highlighting -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/tokyo-night-dark.min.css">
-  <link rel="stylesheet" href="index.css">
-  <style>
-    /* Engine Toggle Switch Styles */
-    .engine-toggle-container {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      font-size: 10px;
-    }
-    .active-engine {
-      color: var(--accent-cyan, #00ffff);
-      text-shadow: 0 0 5px var(--accent-cyan, #00ffff);
-    }
-    .switch {
-      position: relative;
-      display: inline-block;
-      width: 34px;
-      height: 18px;
-    }
-    .switch input {
-      opacity: 0;
-      width: 0;
-      height: 0;
-    }
-    .slider {
-      position: absolute;
-      cursor: pointer;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background-color: rgba(255, 255, 255, 0.1);
-      transition: .4s;
-      border: 1px solid var(--border-color, #333);
-    }
-    .slider:before {
-      position: absolute;
-      content: "";
-      height: 12px;
-      width: 12px;
-      left: 2px;
-      bottom: 2px;
-      background-color: var(--accent-cyan, #00ffff);
-      transition: .4s;
-    }
-    input:checked + .slider {
-      background-color: rgba(255, 51, 102, 0.2);
-    }
-    input:checked + .slider:before {
-      transform: translateX(16px);
-      background-color: #ff3366;
-    }
-    .slider.round {
-      border-radius: 18px;
-    }
-    .slider.round:before {
-      border-radius: 50%;
-    }
-  </style>
-</head>
-<body>
-  <div class="hud-container">
-    
-    <!-- Titlebar -->
-    <header class="titlebar">
-      <div class="titlebar-logo">
-        <span class="logo-icon"></span>
-        <span class="logo-text">J.A.R.V.I.S. // CORE_OS_v2.0_AI</span>
-      </div>
-      <div class="titlebar-controls">
-        <button id="btn-minimize" class="control-btn" title="Minimize">—</button>
-        <button id="btn-close" class="control-btn close-btn" title="Close">×</button>
-      </div>
-    </header>
-
-    <main class="hud-content">
-      <div class="corner-highlight top-left"></div>
-      <div class="corner-highlight top-right"></div>
-      <div class="corner-highlight bottom-left"></div>
-      <div class="corner-highlight bottom-right"></div>
-      <div class="scanner-line"></div>
-
-      <!-- Header Section -->
-      <section class="hud-header">
-        <h1>INTELLIGENCE MODULE ACTIVE</h1>
-        <div class="status-indicator">
-          <span class="status-dot pulsing" id="status-dot"></span>
-          <span class="status-label" id="status-label">AWAITING INPUT</span>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>JARVIS Core System</title>
+    <!-- Google Fonts for futuristic Sci-Fi UI -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&family=JetBrains+Mono:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
+    <!-- Highlight.js for Code Highlighting -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/tokyo-night-dark.min.css"
+    />
+    <link rel="stylesheet" href="index.css" />
+    <style>
+      /* Engine Toggle Switch Styles */
+      .engine-toggle-container {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 10px;
+      }
+      .active-engine {
+        color: var(--accent-cyan, #00ffff);
+        text-shadow: 0 0 5px var(--accent-cyan, #00ffff);
+      }
+      .switch {
+        position: relative;
+        display: inline-block;
+        width: 34px;
+        height: 18px;
+      }
+      .switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+      }
+      .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(255, 255, 255, 0.1);
+        transition: 0.4s;
+        border: 1px solid var(--border-color, #333);
+      }
+      .slider:before {
+        position: absolute;
+        content: "";
+        height: 12px;
+        width: 12px;
+        left: 2px;
+        bottom: 2px;
+        background-color: var(--accent-cyan, #00ffff);
+        transition: 0.4s;
+      }
+      input:checked + .slider {
+        background-color: rgba(255, 51, 102, 0.2);
+      }
+      input:checked + .slider:before {
+        transform: translateX(16px);
+        background-color: #ff3366;
+      }
+      .slider.round {
+        border-radius: 18px;
+      }
+      .slider.round:before {
+        border-radius: 50%;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="hud-container">
+      <!-- Titlebar -->
+      <header class="titlebar">
+        <div class="titlebar-logo">
+          <span class="logo-icon"></span>
+          <span class="logo-text">J.A.R.V.I.S. // CORE_OS_v2.0_AI</span>
         </div>
-      </section>
+        <div class="titlebar-controls">
+          <button id="btn-minimize" class="control-btn" title="Minimize">
+            —
+          </button>
+          <button id="btn-close" class="control-btn close-btn" title="Close">
+            ×
+          </button>
+        </div>
+      </header>
 
-      <!-- Main Layout -->
-      <div class="hud-grid">
-        
-        <!-- Intelligence Briefing -->
-        <section class="panel briefing-panel" style="flex: 1;">
-          <div class="panel-header">
-            <h2>INTELLIGENCE BRIEFING</h2>
-          </div>
-          <div class="panel-body">
-            <div class="panel-desc">LIVE GLOBAL DATA STREAMS</div>
-            <div id="briefing-container" class="briefing-list">
-              <!-- Placeholder items, will be populated by AI -->
-              <div class="briefing-item">
-                <span class="briefing-time" id="briefing-time-1">--:--</span>
-                Initializing global intel stream... awaiting first ping.
-              </div>
-            </div>
+      <main class="hud-content">
+        <div class="corner-highlight top-left"></div>
+        <div class="corner-highlight top-right"></div>
+        <div class="corner-highlight bottom-left"></div>
+        <div class="corner-highlight bottom-right"></div>
+        <div class="scanner-line"></div>
+
+        <!-- Header Section -->
+        <section class="hud-header">
+          <h1>INTELLIGENCE MODULE ACTIVE</h1>
+          <div class="status-indicator">
+            <span class="status-dot pulsing" id="status-dot"></span>
+            <span class="status-label" id="status-label">AWAITING INPUT</span>
           </div>
         </section>
 
-        <!-- Chat Interface -->
-        <section class="panel chat-panel" style="flex: 1;">  
-          <div class="panel-header">
-            <h2>COMMUNICATIONS LINK</h2>
-          </div>
-          <div class="panel-body chat-stream-container">
-            <div id="chat-stream" class="chat-stream">
-              <div class="log-entry system">[SYSTEM] JARVIS v2.3 connection established. Tool endpoints registered.</div>
-            </div>
-            
-            <div class="chat-input-wrapper">
-              <textarea id="chat-input" class="chat-textarea" placeholder="Input directive for JARVIS..." rows="1"></textarea>
-              <button id="btn-send-chat" class="glowing-btn small-btn">SEND</button>
-            </div>
-          </div>
-        </section>
-
-        <!-- Sidebar Telemetry & Diagnostics -->
-        <div style="display: flex; flex-direction: column; gap: 20px;">
-          <section class="panel radar-panel">
+        <!-- Main Layout -->
+        <div class="hud-grid">
+          <!-- Intelligence Briefing -->
+          <section class="panel briefing-panel" style="flex: 1">
             <div class="panel-header">
-              <h2>CORE TELEMETRY</h2>
+              <h2>INTELLIGENCE BRIEFING</h2>
             </div>
-            <div class="panel-body radar-wrapper">
-              <div class="radar-circle" style="width: 80px; height: 80px;">
-                <div class="radar-sweep"></div>
-                <div class="radar-crosshair"></div>
-                <div class="radar-dot dot-1"></div>
-              </div>
-              <div class="telemetry-stats">
-                <div class="stat-row"><span>LATENCY:</span> <span class="blue-text" id="latency-stat">0ms</span></div>
-                <div class="stat-row"><span>API_STATUS:</span> <span class="blue-text" id="api-status-stat" style="cursor: pointer; font-weight: bold; transition: color 0.3s;" title="Click to test API">CHECKING...</span></div>
-                <div class="stat-row" style="margin-top: 10px;">
-                  <span>ENGINE:</span> 
-                  <div class="engine-toggle-container">
-                    <span id="label-groq" class="active-engine">GROQ</span>
-                    <label class="switch">
-                      <input type="checkbox" id="engine-toggle">
-                      <span class="slider round"></span>
-                    </label>
-                    <span id="label-local" style="color: #666;">LOCAL</span>
-                  </div>
+            <div class="panel-body">
+              <div class="panel-desc">LIVE GLOBAL DATA STREAMS</div>
+              <div id="briefing-container" class="briefing-list">
+                <!-- Placeholder items, will be populated by AI -->
+                <div class="briefing-item">
+                  <span class="briefing-time" id="briefing-time-1">--:--</span>
+                  Initializing global intel stream... awaiting first ping.
                 </div>
               </div>
             </div>
           </section>
 
-          <section class="panel console-panel">
+          <!-- Chat Interface -->
+          <section class="panel chat-panel" style="flex: 1">
             <div class="panel-header">
-              <h2>IPC PING TEST</h2>
+              <h2>COMMUNICATIONS LINK</h2>
             </div>
-            <div class="panel-body">
-              <input type="text" id="ping-message" value="Ping" class="ping-input" style="width:100%; margin-bottom:10px; background: rgba(0,0,0,0.5); border: 1px solid var(--border-color); color: var(--accent-cyan); padding: 5px;">
-              <button id="btn-ping" class="glowing-btn" style="width: 100%;">TEST BRIDGE</button>
-              <div id="console-logs" class="console-output" style="margin-top: 10px; max-height: 80px;"></div>
+            <div class="panel-body chat-stream-container">
+              <div id="chat-stream" class="chat-stream">
+                <div class="log-entry system">
+                  [SYSTEM] JARVIS v2.3 connection established. Tool endpoints
+                  registered.
+                </div>
+              </div>
+
+              <div class="chat-input-wrapper">
+                <textarea
+                  id="chat-input"
+                  class="chat-textarea"
+                  placeholder="Input directive for JARVIS..."
+                  rows="1"
+                ></textarea>
+                <button id="btn-send-chat" class="glowing-btn small-btn">
+                  SEND
+                </button>
+              </div>
             </div>
           </section>
+
+          <!-- Sidebar Telemetry & Diagnostics -->
+          <div style="display: flex; flex-direction: column; gap: 20px">
+            <section class="panel radar-panel">
+              <div class="panel-header">
+                <h2>CORE TELEMETRY</h2>
+              </div>
+              <div class="panel-body radar-wrapper">
+                <div class="radar-circle" style="width: 80px; height: 80px">
+                  <div class="radar-sweep"></div>
+                  <div class="radar-crosshair"></div>
+                  <div class="radar-dot dot-1"></div>
+                </div>
+                <div class="telemetry-stats">
+                  <div class="stat-row">
+                    <span>LATENCY:</span>
+                    <span class="blue-text" id="latency-stat">0ms</span>
+                  </div>
+                  <div class="stat-row">
+                    <span>API_STATUS:</span>
+                    <span
+                      class="blue-text"
+                      id="api-status-stat"
+                      style="
+                        cursor: pointer;
+                        font-weight: bold;
+                        transition: color 0.3s;
+                      "
+                      title="Click to test API"
+                      >CHECKING...</span
+                    >
+                  </div>
+                  <div class="stat-row" style="margin-top: 10px">
+                    <span>ENGINE:</span>
+                    <div class="engine-toggle-container">
+                      <span id="label-groq" class="active-engine">GROQ</span>
+                      <label class="switch">
+                        <input type="checkbox" id="engine-toggle" />
+                        <span class="slider round"></span>
+                      </label>
+                      <span id="label-local" style="color: #666">LOCAL</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <section class="panel console-panel">
+              <div class="panel-header">
+                <h2>IPC PING TEST</h2>
+              </div>
+              <div class="panel-body">
+                <input
+                  type="text"
+                  id="ping-message"
+                  value="Ping"
+                  class="ping-input"
+                  style="
+                    width: 100%;
+                    margin-bottom: 10px;
+                    background: rgba(0, 0, 0, 0.5);
+                    border: 1px solid var(--border-color);
+                    color: var(--accent-cyan);
+                    padding: 5px;
+                  "
+                />
+                <button id="btn-ping" class="glowing-btn" style="width: 100%">
+                  TEST BRIDGE
+                </button>
+                <div
+                  id="console-logs"
+                  class="console-output"
+                  style="margin-top: 10px; max-height: 80px"
+                ></div>
+              </div>
+            </section>
+          </div>
         </div>
+      </main>
 
-      </div>
-    </main>
+      <footer class="hud-footer">
+        <div class="footer-segment">LOC // 127.0.0.1</div>
+        <div class="footer-segment text-center">
+          AI COGNITIVE MODULES: ONLINE (LLAMA-3.3-70B)
+        </div>
+        <div class="footer-segment text-right" id="clock">00:00:00</div>
+        <button id="play">Speak!</button>
+      </footer>
+    </div>
 
-    <footer class="hud-footer">
-      <div class="footer-segment">LOC // 127.0.0.1</div>
-      <div class="footer-segment text-center">AI COGNITIVE MODULES: ONLINE (LLAMA-3.3-70B)</div>
-      <div class="footer-segment text-right" id="clock">00:00:00</div>
-    </footer>
-  </div>
-
-  <!-- Marked JS for Markdown -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.2/marked.min.js"></script>
-  <!-- Highlight JS for Code -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
-  <script src="renderer.js"></script>
-</body>
+    <!-- Marked JS for Markdown -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.2/marked.min.js"></script>
+    <!-- Highlight JS for Code -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+    <!-- Bypass Puter unsupported protocol dialog under file:// protocol -->
+    <script>
+      if (typeof customElements !== 'undefined') {
+        const originalDefine = customElements.define;
+        customElements.define = function(name, constructor, options) {
+          if (name === 'puter-dialog' && window.location.protocol === 'file:') {
+            constructor.prototype.open = function() {
+              console.log("Blocked puter-dialog open under file:// protocol");
+            };
+          }
+          return originalDefine.call(customElements, name, constructor, options);
+        };
+      }
+    </script>
+    <!-- Bypass Puter unsupported protocol dialog & load Puter SDK -->
+    <script>
+      document.getElementById("play").addEventListener("click", () => {
+        puter.ai
+          .txt2speech(`Hello world! Puter is pretty amazing, don't you agree?`)
+          .then((audio) => {
+            audio.play();
+          });
+      });
+    </script>
+    <script src="https://js.puter.com/v2/"></script>
+    <script src="renderer.js"></script>
+  </body>
 </html>

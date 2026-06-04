@@ -1,89 +1,106 @@
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener("DOMContentLoaded", () => {
   // Elements
-  const btnMinimize = document.getElementById('btn-minimize');
-  const btnClose = document.getElementById('btn-close');
-  const btnPing = document.getElementById('btn-ping');
-  const pingInput = document.getElementById('ping-message');
-  const consoleLogs = document.getElementById('console-logs');
-  const clockEl = document.getElementById('clock');
-  const cpuStatEl = document.getElementById('cpu-stat');
-  const latencyStatEl = document.getElementById('latency-stat');
-  
-  const chatStream = document.getElementById('chat-stream');
-  const chatInput = document.getElementById('chat-input');
-  const btnSendChat = document.getElementById('btn-send-chat');
-  const statusLabel = document.getElementById('status-label');
-  const statusDot = document.getElementById('status-dot');
+  const btnMinimize = document.getElementById("btn-minimize");
+  const btnClose = document.getElementById("btn-close");
+  const btnPing = document.getElementById("btn-ping");
+  const pingInput = document.getElementById("ping-message");
+  const consoleLogs = document.getElementById("console-logs");
+  const clockEl = document.getElementById("clock");
+  const cpuStatEl = document.getElementById("cpu-stat");
+  const latencyStatEl = document.getElementById("latency-stat");
+
+  const chatStream = document.getElementById("chat-stream");
+  const chatInput = document.getElementById("chat-input");
+  const btnSendChat = document.getElementById("btn-send-chat");
+  const statusLabel = document.getElementById("status-label");
+  const statusDot = document.getElementById("status-dot");
 
   // Verify IPC API presence
-  const isBridgeReady = typeof window.jarvisAPI !== 'undefined';
+  const isBridgeReady = typeof window.jarvisAPI !== "undefined";
 
   // Configure marked for markdown parsing
-  if (typeof marked !== 'undefined') {
+  if (typeof marked !== "undefined") {
     marked.setOptions({
-      highlight: function(code, lang) {
-        if (typeof hljs !== 'undefined' && lang && hljs.getLanguage(lang)) {
+      highlight: function (code, lang) {
+        if (typeof hljs !== "undefined" && lang && hljs.getLanguage(lang)) {
           return hljs.highlight(code, { language: lang }).value;
         }
         return code;
       },
       breaks: true,
-      gfm: true
+      gfm: true,
     });
   }
 
   // Window controls
   if (isBridgeReady) {
-    if (btnMinimize) btnMinimize.addEventListener('click', () => window.jarvisAPI.sendWindowControl('minimize'));
-    if (btnClose) btnClose.addEventListener('click', () => window.jarvisAPI.sendWindowControl('close'));
+    if (btnMinimize)
+      btnMinimize.addEventListener("click", () =>
+        window.jarvisAPI.sendWindowControl("minimize"),
+      );
+    if (btnClose)
+      btnClose.addEventListener("click", () =>
+        window.jarvisAPI.sendWindowControl("close"),
+      );
 
     // Listen for Tool Events to render them
     window.jarvisAPI.onToolEvent((data) => {
-      if (data.type === 'call') {
+      if (data.type === "call") {
         let argDisplay = data.args;
         try {
-          const argsObj = typeof data.args === 'string' ? JSON.parse(data.args) : data.args;
-          argDisplay = Object.values(argsObj).map(v => typeof v === 'string' ? v : JSON.stringify(v)).join(',\\n');
+          const argsObj =
+            typeof data.args === "string" ? JSON.parse(data.args) : data.args;
+          argDisplay = Object.values(argsObj)
+            .map((v) => (typeof v === "string" ? v : JSON.stringify(v)))
+            .join(",\\n");
           argDisplay = argDisplay.replace(/</g, "&lt;").replace(/>/g, "&gt;");
-        } catch(e) { }
+        } catch (e) {}
 
         const html = `<div class="chat-msg system" style="font-size: 11px; opacity: 0.8; margin-left: 20px; border-left: 2px solid var(--accent-orange); padding-left: 10px;">
           > Executing tool <b>${data.name}</b><br/>
           <pre style="white-space: pre-wrap; margin: 5px 0 0 0; font-family: monospace; color: hsla(38, 100%, 70%, 0.8);">${argDisplay}</pre>
         </div>`;
-        chatStream.insertAdjacentHTML('beforeend', html);
+        chatStream.insertAdjacentHTML("beforeend", html);
         chatStream.scrollTop = chatStream.scrollHeight;
-        
+
         // Trigger Toast for Memories and Update Dashboard
-        if (data.name === 'save_memory') {
+        if (data.name === "save_memory") {
           try {
             const argsObj = JSON.parse(data.args);
             showToast(argsObj.memory_text);
-          } catch(e) {
+          } catch (e) {
             showToast("New memory securely stored.");
           }
-        } else if (data.name === 'update_dashboard') {
+        } else if (data.name === "update_dashboard") {
           try {
-            const argsObj = typeof data.args === 'string' ? JSON.parse(data.args) : data.args;
+            const argsObj =
+              typeof data.args === "string" ? JSON.parse(data.args) : data.args;
             const items = argsObj.items;
-            const container = document.getElementById('briefing-container');
+            const container = document.getElementById("briefing-container");
             if (container && items && Array.isArray(items)) {
-               container.innerHTML = ''; // Clear previous items
-               items.forEach(item => {
-                 const time = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-                 const safeItem = item.replace(/</g, "&lt;").replace(/>/g, "&gt;");
-                 container.innerHTML += `<div class="briefing-item"><span class="briefing-time">${time}</span>${safeItem}</div>`;
-               });
+              container.innerHTML = ""; // Clear previous items
+              items.forEach((item) => {
+                const time = new Date().toLocaleTimeString([], {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                });
+                const safeItem = item
+                  .replace(/</g, "&lt;")
+                  .replace(/>/g, "&gt;");
+                container.innerHTML += `<div class="briefing-item"><span class="briefing-time">${time}</span>${safeItem}</div>`;
+              });
             }
-          } catch(e) { console.error("Failed to parse update_dashboard items", e); }
+          } catch (e) {
+            console.error("Failed to parse update_dashboard items", e);
+          }
         }
-      } else if (data.type === 'result') {
+      } else if (data.type === "result") {
         let resStr = JSON.stringify(data.result);
-        if (resStr.length > 200) resStr = resStr.substring(0, 200) + '...';
+        if (resStr.length > 200) resStr = resStr.substring(0, 200) + "...";
         const html = `<div class="chat-msg system" style="font-size: 11px; opacity: 0.8; margin-left: 20px; border-left: 2px solid var(--accent-orange); padding-left: 10px;">
           > Result: <code>${resStr.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</code>
         </div>`;
-        chatStream.insertAdjacentHTML('beforeend', html);
+        chatStream.insertAdjacentHTML("beforeend", html);
         chatStream.scrollTop = chatStream.scrollHeight;
       }
     });
@@ -91,46 +108,48 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Toast Notification System
   function showToast(message) {
-    const toast = document.createElement('div');
+    const toast = document.createElement("div");
     toast.innerHTML = `<strong style="color:#fff; letter-spacing:1px;">[SYSTEM] MEMORY UPDATED</strong><br/><br/>${message}`;
-    
+
     Object.assign(toast.style, {
-      position: 'fixed',
-      top: '50px',
-      right: '20px',
-      background: 'hsla(30, 20%, 6%, 0.95)',
-      color: 'hsl(38, 100%, 50%)',
-      border: '1px solid hsla(38, 100%, 50%, 0.6)',
-      padding: '15px 20px',
-      borderRadius: '8px',
-      boxShadow: '0 4px 20px rgba(0,0,0,0.8), 0 0 10px hsla(38, 100%, 50%, 0.2)',
-      zIndex: '9999',
-      fontFamily: 'monospace',
-      fontSize: '12px',
-      maxWidth: '300px',
-      opacity: '0',
-      transform: 'translateX(50px)',
-      transition: 'opacity 0.4s ease, transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
+      position: "fixed",
+      top: "50px",
+      right: "20px",
+      background: "hsla(30, 20%, 6%, 0.95)",
+      color: "hsl(38, 100%, 50%)",
+      border: "1px solid hsla(38, 100%, 50%, 0.6)",
+      padding: "15px 20px",
+      borderRadius: "8px",
+      boxShadow:
+        "0 4px 20px rgba(0,0,0,0.8), 0 0 10px hsla(38, 100%, 50%, 0.2)",
+      zIndex: "9999",
+      fontFamily: "monospace",
+      fontSize: "12px",
+      maxWidth: "300px",
+      opacity: "0",
+      transform: "translateX(50px)",
+      transition:
+        "opacity 0.4s ease, transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)",
     });
-    
+
     document.body.appendChild(toast);
-    
+
     setTimeout(() => {
-      toast.style.opacity = '1';
-      toast.style.transform = 'translateX(0)';
+      toast.style.opacity = "1";
+      toast.style.transform = "translateX(0)";
     }, 50);
-    
+
     setTimeout(() => {
-      toast.style.opacity = '0';
-      toast.style.transform = 'translateX(50px)';
+      toast.style.opacity = "0";
+      toast.style.transform = "translateX(50px)";
       setTimeout(() => toast.remove(), 400);
     }, 6000);
   }
 
   // IPC Ping Test
   if (btnPing && isBridgeReady) {
-    btnPing.addEventListener('click', async () => {
-      const msg = pingInput.value || 'Ping';
+    btnPing.addEventListener("click", async () => {
+      const msg = pingInput.value || "Ping";
       const start = performance.now();
       try {
         const res = await window.jarvisAPI.ping(msg);
@@ -150,18 +169,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Append User Message only if it's from the input box
     if (overrideText === null) {
-      appendChatMessage('user', text);
-      chatInput.value = '';
+      appendChatMessage("user", text);
+      chatInput.value = "";
     }
-    
+
     // Set Status
     statusLabel.textContent = "PROCESSING...";
-    statusDot.classList.add('pulsing');
-    
+    statusDot.classList.add("pulsing");
+
     // Add a temporary typing indicator for AI
     const typingId = `msg-${Date.now()}`;
     const typingHtml = `<div class="chat-msg ai" id="${typingId}">[JARVIS is thinking...]</div>`;
-    chatStream.insertAdjacentHTML('beforeend', typingHtml);
+    chatStream.insertAdjacentHTML("beforeend", typingHtml);
     chatStream.scrollTop = chatStream.scrollHeight;
 
     try {
@@ -174,54 +193,104 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // Send to AI Backend
       const response = await window.jarvisAPI.sendChatMessage(text);
-      
+
       // Remove typing indicator
       const thinkingEl = document.getElementById(typingId);
       if (thinkingEl) thinkingEl.remove();
 
       if (response.error) {
-        appendChatMessage('system', `[ERROR] ${response.error}`);
+        appendChatMessage("system", `[ERROR] ${response.error}`);
       } else {
-        appendChatMessage('ai', response.text, true);
+        appendChatMessage("ai", response.text, true);
       }
     } catch (e) {
       document.getElementById(typingId)?.remove();
-      appendChatMessage('system', `[CRITICAL ERROR] ${e.message}`);
+      appendChatMessage("system", `[CRITICAL ERROR] ${e.message}`);
     } finally {
       statusLabel.textContent = "AWAITING INPUT";
-      statusDot.classList.remove('pulsing');
+      statusDot.classList.remove("pulsing");
+    }
+  }
+
+  let currentAudio = null;
+
+  function cleanTextForTTS(text) {
+    if (!text) return "";
+    // Strip markdown code blocks
+    let clean = text.replace(/```[\s\S]*?```/g, "[code block]");
+    // Strip inline code backticks but keep content
+    clean = clean.replace(/`([^`]+)`/g, "$1");
+    // Remove typical markdown punctuation like asterisks, hashtags, underscores, arrows
+    clean = clean.replace(/[*#_\->\+\|]/g, " ");
+    // Clean up multiple whitespace characters
+    clean = clean.replace(/\s+/g, " ").trim();
+    return clean;
+  }
+
+  function speakText(text) {
+    const cleaned = cleanTextForTTS(text);
+    if (!cleaned) return;
+
+    if (typeof puter !== "undefined" && puter.ai && puter.ai.txt2speech) {
+      if (currentAudio) {
+        try {
+          currentAudio.pause();
+          currentAudio.currentTime = 0;
+        } catch (e) {
+          console.error("Error stopping audio:", e);
+        }
+      }
+
+      puter.ai
+        .txt2speech(cleaned)
+        .then((audio) => {
+          currentAudio = audio;
+          audio.play().catch((err) => {
+            console.error("Playback error:", err);
+          });
+        })
+        .catch((err) => {
+          console.error("TTS generation error:", err);
+        });
+    } else {
+      console.warn("Puter SDK is not available.");
     }
   }
 
   function appendChatMessage(role, content, isMarkdown = false) {
-    const div = document.createElement('div');
+    const div = document.createElement("div");
     div.className = `chat-msg ${role}`;
-    
-    if (isMarkdown && typeof marked !== 'undefined') {
+
+    if (isMarkdown && typeof marked !== "undefined") {
       div.innerHTML = marked.parse(content);
     } else {
       div.textContent = content;
     }
-    
+
     chatStream.appendChild(div);
     chatStream.scrollTop = chatStream.scrollHeight;
+
+    // Voice user and AI chat messages
+    if (role === "user" || role === "ai") {
+      speakText(content);
+    }
   }
 
   // Chat Input History
   const inputHistory = [];
   let historyIndex = -1;
-  let tempCurrentInput = '';
+  let tempCurrentInput = "";
 
   // Input Keyboard Controls
-  chatInput.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
+  chatInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
-      if (chatInput.value.trim() !== '') {
+      if (chatInput.value.trim() !== "") {
         inputHistory.push(chatInput.value.trim());
         historyIndex = inputHistory.length;
       }
       handleSendChat();
-    } else if (e.key === 'ArrowUp') {
+    } else if (e.key === "ArrowUp") {
       if (historyIndex > 0) {
         e.preventDefault();
         if (historyIndex === inputHistory.length) {
@@ -230,7 +299,7 @@ document.addEventListener('DOMContentLoaded', () => {
         historyIndex--;
         chatInput.value = inputHistory[historyIndex];
       }
-    } else if (e.key === 'ArrowDown') {
+    } else if (e.key === "ArrowDown") {
       if (historyIndex < inputHistory.length - 1) {
         e.preventDefault();
         historyIndex++;
@@ -242,32 +311,39 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
   });
-  
+
   if (btnSendChat) {
-    btnSendChat.addEventListener('click', handleSendChat);
+    btnSendChat.addEventListener("click", handleSendChat);
   }
 
   // Clocks and Telemetry
   setInterval(() => {
-    document.getElementById('clock').textContent = new Date().toLocaleTimeString();
+    document.getElementById("clock").textContent =
+      new Date().toLocaleTimeString();
   }, 1000);
   // API Status Check
-  const apiStatusEl = document.getElementById('api-status-stat');
-  
+  const apiStatusEl = document.getElementById("api-status-stat");
+
   // Automated Intelligence Sweep (every 30 mins)
-  const SWEEP_INTERVAL = 30 * 60 * 1000; 
+  const SWEEP_INTERVAL = 30 * 60 * 1000;
   async function triggerIntelSweep() {
     if (!isBridgeReady) return;
-    appendChatMessage('system', '[SYSTEM] Initiating scheduled intelligence sweep in background...');
-    const prompt = "CRITICAL BACKGROUND TASK: Execute a web search for the latest top global news or tech news for today's date. Summarize the top 3-4 most important headlines, and then use the `update_dashboard` tool to push those summaries to the UI. YOU MUST ONLY USE THE TOOL. DO NOT OUTPUT ANY CONVERSATIONAL TEXT.";
-    
+    appendChatMessage(
+      "system",
+      "[SYSTEM] Initiating scheduled intelligence sweep in background...",
+    );
+    const prompt =
+      "CRITICAL BACKGROUND TASK: Execute a web search for the latest top global news or tech news for today's date. Summarize the top 3-4 most important headlines, and then use the `update_dashboard` tool to push those summaries to the UI. YOU MUST ONLY USE THE TOOL. DO NOT OUTPUT ANY CONVERSATIONAL TEXT.";
+
     statusLabel.textContent = "SWEEPING...";
     try {
       await window.jarvisAPI.sendChatMessage(prompt);
       statusLabel.textContent = "AWAITING INPUT";
-    } catch(e) {
+    } catch (e) {
       statusLabel.textContent = "SWEEP FAILED";
-      setTimeout(() => { statusLabel.textContent = "AWAITING INPUT"; }, 3000);
+      setTimeout(() => {
+        statusLabel.textContent = "AWAITING INPUT";
+      }, 3000);
     }
   }
 
@@ -284,11 +360,11 @@ document.addEventListener('DOMContentLoaded', () => {
       apiStatusEl.style.color = "var(--text-dim)";
       apiStatusEl.style.textShadow = "none";
     }
-    
+
     try {
       const res = await window.jarvisAPI.checkApiStatus();
       if (apiStatusEl) {
-        if (res.status === 'online') {
+        if (res.status === "online") {
           apiStatusEl.textContent = "ONLINE";
           apiStatusEl.style.color = "hsl(120, 100%, 50%)"; // Neon green
           apiStatusEl.style.textShadow = "0 0 8px hsl(120, 100%, 40%)";
@@ -311,47 +387,57 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   if (apiStatusEl) {
-    apiStatusEl.addEventListener('click', checkApiConnection);
+    apiStatusEl.addEventListener("click", checkApiConnection);
   }
 
   // Engine Toggle Logic
-  const engineToggle = document.getElementById('engine-toggle');
-  const labelGroq = document.getElementById('label-groq');
-  const labelLocal = document.getElementById('label-local');
-  const footerAiModule = document.querySelector('.footer-segment.text-center');
+  const engineToggle = document.getElementById("engine-toggle");
+  const labelGroq = document.getElementById("label-groq");
+  const labelLocal = document.getElementById("label-local");
+  const footerAiModule = document.querySelector(".footer-segment.text-center");
 
   if (engineToggle && isBridgeReady) {
-    engineToggle.addEventListener('change', async (e) => {
+    engineToggle.addEventListener("change", async (e) => {
       const isLocal = e.target.checked;
-      const engine = isLocal ? 'local' : 'groq';
-      
+      const engine = isLocal ? "local" : "groq";
+
       // Update UI labels
       if (isLocal) {
-        labelLocal.classList.add('active-engine');
-        labelLocal.style.color = '';
-        labelGroq.classList.remove('active-engine');
-        labelGroq.style.color = '#666';
-        if (footerAiModule) footerAiModule.textContent = 'AI COGNITIVE MODULES: ONLINE (QWEN-2.5-CODER)';
+        labelLocal.classList.add("active-engine");
+        labelLocal.style.color = "";
+        labelGroq.classList.remove("active-engine");
+        labelGroq.style.color = "#666";
+        if (footerAiModule)
+          footerAiModule.textContent =
+            "AI COGNITIVE MODULES: ONLINE (QWEN-2.5-CODER)";
       } else {
-        labelGroq.classList.add('active-engine');
-        labelGroq.style.color = '';
-        labelLocal.classList.remove('active-engine');
-        labelLocal.style.color = '#666';
-        if (footerAiModule) footerAiModule.textContent = 'AI COGNITIVE MODULES: ONLINE (LLAMA-3.3-70B)';
+        labelGroq.classList.add("active-engine");
+        labelGroq.style.color = "";
+        labelLocal.classList.remove("active-engine");
+        labelLocal.style.color = "#666";
+        if (footerAiModule)
+          footerAiModule.textContent =
+            "AI COGNITIVE MODULES: ONLINE (LLAMA-3.3-70B)";
       }
 
       try {
         await window.jarvisAPI.setAiEngine(engine);
         // Re-check status on the new engine
         checkApiConnection();
-        
-        appendChatMessage('system', `[SYSTEM] Engine switched to: ${engine.toUpperCase()}`);
+
+        appendChatMessage(
+          "system",
+          `[SYSTEM] Engine switched to: ${engine.toUpperCase()}`,
+        );
       } catch (err) {
-        appendChatMessage('system', `[ERROR] Failed to switch engine: ${err.message}`);
+        appendChatMessage(
+          "system",
+          `[ERROR] Failed to switch engine: ${err.message}`,
+        );
       }
     });
   }
-  
+
   // Run check initially and then every 30 seconds
   checkApiConnection();
   setInterval(checkApiConnection, 30000);
